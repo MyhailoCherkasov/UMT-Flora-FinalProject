@@ -1,0 +1,10 @@
+:root {
+  --color-ink: #030C01;
+  --color-page: #FFFFFF;
+  --color-muted-bg: #F8F9F8;
+  --button-gradient: linear-gradient(90deg, #E8E81C 0%, #42ED13 100%);
+  --button-gradient-hover: linear-gradient(90deg, #F3F38D 0%, #A0F689 100%);
+  --button-pressed-bg: #4A4F46;
+  --button-disabled-bg: linear-gradient(90deg, #FBFBDB 0%, #DDFBD6 100%);
+  --button-label-color: #030C01;
+}
