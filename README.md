@@ -2,4 +2,4 @@
 ## Посилання на frontend-репозиторій:
 ## Посилання на живий backend:
 ## Посилання на живий frontend: 
-## Посилання на Swagger UI: 
+## Посилання на Swagger UI: https://umt-flora-finalproject.onrender.com/api-docs/
