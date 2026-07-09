@@ -1,0 +1,678 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Flora Backend API",
+    "version": "1.0.0",
+    "description": "REST API for Flora bouquets with Express, Sequelize, Joi validation, Multer uploads and Swagger documentation. Supports PostgreSQL through DATABASE_URL/DB_DIALECT=postgres and local SQLite fallback for checking."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local backend"
+    },
+    {
+      "url": "https://your-backend.onrender.com",
+      "description": "Hosted backend example"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Bouquets",
+      "description": "Bouquet CRUD, filtering, pagination, favorite status and photo uploads"
+    },
+    {
+      "name": "Forms",
+      "description": "Client forms used by the Flora frontend"
+    },
+    {
+      "name": "System",
+      "description": "Health check"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Backend is running"
+          }
+        }
+      }
+    },
+    "/api/bouquets": {
+      "get": {
+        "tags": [
+          "Bouquets"
+        ],
+        "summary": "Get bouquets with pagination and filters",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Page number"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 8,
+              "maximum": 24
+            },
+            "description": "Items per page"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search by bouquet title"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "romantic",
+                "classic",
+                "bright",
+                "basket"
+              ]
+            },
+            "description": "Category filter"
+          },
+          {
+            "name": "priceMax",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Maximum price"
+          },
+          {
+            "name": "favorite",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter by favorite status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bouquet list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BouquetList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Bouquets"
+        ],
+        "summary": "Create a bouquet",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BouquetCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created bouquet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bouquet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bouquets/{id}": {
+      "get": {
+        "tags": [
+          "Bouquets"
+        ],
+        "summary": "Get one bouquet by id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bouquet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bouquet"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Bouquets"
+        ],
+        "summary": "Update a bouquet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BouquetUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated bouquet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bouquet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bouquets"
+        ],
+        "summary": "Delete a bouquet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/bouquets/{id}/favorite": {
+      "patch": {
+        "tags": [
+          "Bouquets"
+        ],
+        "summary": "Update favorite status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated bouquet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bouquet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/bouquets/{id}/photo": {
+      "post": {
+        "tags": [
+          "Bouquets"
+        ],
+        "summary": "Upload bouquet photo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "photo"
+                ],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photo uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bouquet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Upload error"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/orders": {
+      "post": {
+        "tags": [
+          "Forms"
+        ],
+        "summary": "Send order form",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order accepted"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/subscriptions": {
+      "post": {
+        "tags": [
+          "Forms"
+        ],
+        "summary": "Send subscription form",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subscription accepted"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Bouquet": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "Spring Elegance"
+          },
+          "name": {
+            "type": "string",
+            "example": "Spring Elegance"
+          },
+          "description": {
+            "type": "string",
+            "example": "Each stem is carefully selected to create a bouquet that radiates freshness."
+          },
+          "price": {
+            "type": "integer",
+            "example": 35
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "romantic",
+              "classic",
+              "bright",
+              "basket"
+            ],
+            "example": "classic"
+          },
+          "favorite": {
+            "type": "boolean",
+            "example": false
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "/photos/bouquet-1.jpg"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true,
+            "example": "top-bouquet-1"
+          },
+          "alt": {
+            "type": "string",
+            "example": "Spring Elegance bouquet"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BouquetCreate": {
+        "type": "object",
+        "required": [
+          "title",
+          "description",
+          "price",
+          "category",
+          "alt"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 1200
+          },
+          "price": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "romantic",
+              "classic",
+              "bright",
+              "basket"
+            ]
+          },
+          "favorite": {
+            "type": "boolean",
+            "default": false
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "alt": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 160
+          }
+        }
+      },
+      "BouquetUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 1200
+          },
+          "price": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "romantic",
+              "classic",
+              "bright",
+              "basket"
+            ]
+          },
+          "favorite": {
+            "type": "boolean"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "alt": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 160
+          }
+        }
+      },
+      "FavoriteUpdate": {
+        "type": "object",
+        "required": [
+          "favorite"
+        ],
+        "properties": {
+          "favorite": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "BouquetList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Bouquet"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Bouquet not found"
+          }
+        }
+      },
+      "OrderCreate": {
+        "type": "object",
+        "required": [
+          "productId",
+          "name",
+          "phone",
+          "address"
+        ],
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Ann"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1 (555) 123-4567"
+          },
+          "address": {
+            "type": "string",
+            "example": "456 Floral Ave, Sydney NSW 2000 AU"
+          },
+          "message": {
+            "type": "string",
+            "example": "Please call before delivery."
+          }
+        }
+      },
+      "SubscriptionCreate": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "client@example.com"
+          }
+        }
+      }
+    }
+  }
+}
