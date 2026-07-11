@@ -1,9 +1,0 @@
-node_modules
-.env
-public/photos/*
-!public/photos/.gitkeep
-temp/*
-!temp/.gitkeep
-
-dev.sqlite
-dev.sqlite-*
