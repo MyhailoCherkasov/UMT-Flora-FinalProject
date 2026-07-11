@@ -1,0 +1,17 @@
+:root {
+  --font-sans: 'Roboto', sans-serif;
+  --font-serif: 'Hanuman', serif;
+
+  --font-size-hero: 36px;
+  --font-size-heading: 48px;
+  --font-size-card-title: 40px;
+  --font-size-copy: 18px;
+
+  --font-weight-hero: 400;
+  --font-weight-heading: 400;
+  --font-weight-card-title: 400;
+  --font-weight-copy: 400;
+
+  --line-height-heading: 1.2;
+  --line-height-copy: 1.5;
+}
