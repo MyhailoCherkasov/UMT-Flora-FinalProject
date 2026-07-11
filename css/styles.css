@@ -16,6 +16,11 @@ img {
   height: auto;
 }
 
+[hidden],
+.is-hidden {
+  display: none !important;
+}
+
 body {
   font-family: var(--font-sans);
   color: var(--color-ink);
