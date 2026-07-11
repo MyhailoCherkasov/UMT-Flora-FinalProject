@@ -22,6 +22,24 @@ const serializeBouquet = item => ({
   updatedAt: item.updatedAt
 });
 
+const bouquetUniqueKey = item => [
+  String(item.title || item.name || '').trim().toLowerCase(),
+  String(item.image || item.photoUrl || '').trim().toLowerCase(),
+  String(item.price || '').trim(),
+  String(item.category || '').trim().toLowerCase()
+].join('|');
+
+const getUniqueBouquets = rows => {
+  const seen = new Set();
+
+  return rows.filter(row => {
+    const key = bouquetUniqueKey(row);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 const buildWhere = query => {
   const where = {};
 
@@ -50,19 +68,24 @@ const listBouquets = async query => {
   const limit = normalizeLimit(query.limit);
   const offset = (page - 1) * limit;
 
-  const { rows, count } = await Bouquet.findAndCountAll({
+  // Важно: пагинация считается после удаления дублей.
+  // На Render база могла накопить повторные seed-записи, и из-за этого
+  // backend сообщал hasMore=true даже когда уникальные букеты уже закончились.
+  const allRows = await Bouquet.findAll({
     where: buildWhere(query),
-    limit,
-    offset,
     order: [['id', 'ASC']]
   });
 
+  const uniqueRows = getUniqueBouquets(allRows);
+  const pageRows = uniqueRows.slice(offset, offset + limit);
+  const total = uniqueRows.length;
+
   return {
-    items: rows.map(serializeBouquet),
-    total: count,
+    items: pageRows.map(serializeBouquet),
+    total,
     page,
     limit,
-    hasMore: offset + rows.length < count
+    hasMore: offset + pageRows.length < total
   };
 };
 
